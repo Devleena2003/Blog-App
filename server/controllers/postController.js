@@ -52,4 +52,80 @@ const getAllPostsController = async (req, res) => {
     });
   }
 };
-module.exports = { createPostController, getAllPostsController };
+const getUserPostsController = async (req, res) => {
+  try {
+    const userPosts = await postModel.find({ postedBy: req.auth._id });
+    res.status(200).send({
+      success: true,
+      message: "user posts",
+      userPosts,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error in User POST API",
+      error,
+    });
+  }
+};
+
+const deletePostController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await postModel.findByIdAndDelete({ _id: id });
+    res.status(200).send({
+      success: true,
+      message: "your post is successfully deleted",
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({
+      success: false,
+      message: "error in delete post api",
+      e,
+    });
+  }
+};
+
+const updatePostController = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const post = await postModel.findById({ _id: req.params.id });
+
+    if (!title || !description) {
+      return res.status(500).send({
+        success: false,
+        message: "No title or description",
+      });
+    }
+    const updatedPost = await postModel.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        title: title || post?.title,
+        description: description || post?.description,
+      },
+      { new: true }
+    );
+
+    res.status(200).send({
+      success: true,
+      message: "updated successfully",
+      updatedPost,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      success: false,
+      message: "error in update api",
+      err,
+    });
+  }
+};
+module.exports = {
+  createPostController,
+  getAllPostsController,
+  getUserPostsController,
+  deletePostController,
+  updatePostController,
+};
